@@ -14,29 +14,60 @@ Setup your hostname as `funkwhale`, which will also be used as the name to find 
 
 ## Setup
 
-First, ssh to your new server.
+### Music Directories
+
+First, ssh to your new server. And set up two folders.
+
+The first one will hold music you upload, you can use a command like `scp -r /my/local/music/dir root@funkwhale:/root/music` to upload your music. You will refer to this directory later as `MUSIC_DIRECTORY_SERVE_PATH`.
+
+The second one should be empty but on a volume with significant space to grow. You will refer to this directory later as `MEDIA_ROOT`.
+
+### Checkout Repo
+
+Now, go to your home directory (`/root` ?) checkout the repo:
+
+```bash
+git clone https://github.com/pomofomo/funkwhale_tailscale.git funkwhale
+cd funkwhale
+```
+
+### Env File
 
 1. Open terminal and run the following command. you will use the output as your Django secret key
-   - openssl rand -base64 45
+   - `openssl rand -base64 45`
 2. open the .env file in a text editor and configure the following variables
-   - FUNKWHALE_API_IP
-   - FUNKWHALE_API_PORT
-   - FUNKWHALE_HOSTNAME
-   - EMAIL_CONFIG (if desired)
-   - ACCOUNT_EMAIL_VERIFICATION (if desired)
-   - MEDIA_ROOT (music uploads from external users will go here)
-   - DJANGO_SECRET_KEY (use the rand from step 1)
-   - MUSIC_DIRECTORY_SERVE_PATH
-3. open funkwhale.subdomain.conf and edit $upstream_app to point to your unraid server IP (NOT the name of the container)
-4. create a funkwhale appdata folder and move docker-compose.yml and .env to it (/mnt/user/appdata/funkwhale)
-5. In unraid terminal, navigate to the appdata folder (cd /mnt/user/appdata/funkwhale)
-6. run "docker compose up -d postgres"
-7. run "docker compose run --rm api funkwhale-manage migrate"
-8. run "docker compose run --rm api funkwhale-manage fw users create --superuser" to create an admin account
-9. run "docker compose up -d"
-10. move funkwhale.subdomain.conf to your SWAG proxyconfs folder (/mnt/user/appdata/swag/nginx/proxyconfs)
-11. restart the SWAG container
+   - `DJANGO_SECRET_KEY` (use the rand from step 1)
+   - `FUNKWHALE_HOSTNAME` (your complete tailscale hostname, e.g. `funkwhale.tail123456.ts.net`)
+   - `MEDIA_ROOT` (music uploads from external users will go here)
+   - `MUSIC_DIRECTORY_SERVE_PATH`
+   - `EMAIL_CONFIG` (if desired)
+   - `ACCOUNT_EMAIL_VERIFICATION` (if desired)
 
-set up your cname on cloudflare/duckdns/etc and you should be able to navigate to your funkwhale instance and login with your superuser account (you will NOT be able to login if you navigate to [IP]:[PORT] )
+### Start with docker
 
-note: the volume mappings will look incorrect but leave them as is. the docker-compose file does not need to be changed
+1. run `docker compose up -d postgres`
+2. run `docker compose run --rm api funkwhale-manage migrate`
+3. run `docker compose run --rm api funkwhale-manage fw users create --superuser` to create an admin account
+4. run `docker compose up -d` to start all the processes
+5. run `docker ps` to view all the processes are running 
+
+### Tailscale Proxy
+
+This should now be available at http://funkwhale.tail123456.ts.net, but we want this to work on https.
+
+Follow the instructions here to enable http certs: https://tailscale.com/kb/1153/enabling-https 
+
+```bash
+tailscale cert
+tailscale serve --bg 80
+```
+
+## Connect from a client
+
+You should now be able to connect from any other device on the same tailscale network.
+
+Just go to http://funkwhale.tail123456.ts.net or whatever your real tailscale name is
+
+## Let to do
+
+Ensure it **only** binds to the tailscale network. See https://tailscale.com/kb/1282/docker

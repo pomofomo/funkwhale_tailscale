@@ -47,7 +47,7 @@ services:
     environment:
       - C_FORCE_ROOT=true
     volumes:
-      - "${MUSIC_DIRECTORY_SERVE_PATH-/srv/funkwhale/data/music}:${MUSIC_DIRECTORY_PATH-/music}:ro"
+      - "${MUSIC_DIRECTORY_SERVE_PATH}:${MUSIC_DIRECTORY_PATH-/music}:ro"
       - "${MEDIA_ROOT}:${MEDIA_ROOT}"
 
   celerybeat:
@@ -75,7 +75,7 @@ services:
       - redis
     env_file: .env
     volumes:
-      - "${MUSIC_DIRECTORY_SERVE_PATH-/srv/funkwhale/data/music}:${MUSIC_DIRECTORY_PATH-/music}:ro"
+      - "${MUSIC_DIRECTORY_SERVE_PATH}:${MUSIC_DIRECTORY_PATH-/music}:ro"
       - "${MEDIA_ROOT}:${MEDIA_ROOT}"
       - "${STATIC_ROOT}:${STATIC_ROOT}"
     command: bash -c "exec gunicorn config.asgi:application --workers ${FUNKWHALE_WEB_WORKERS} --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:${FUNKWHALE_API_PORT}"
@@ -99,12 +99,12 @@ services:
       #- "./nginx/funkwhale.template:/etc/nginx/templates/default.conf.template:ro"
       #- "./nginx/funkwhale_proxy.conf:/etc/nginx/funkwhale_proxy.conf:ro"
 
-      - "${MUSIC_DIRECTORY_SERVE_PATH-/srv/funkwhale/data/music}:${MUSIC_DIRECTORY_PATH-/music}:ro"
+      - "${MUSIC_DIRECTORY_SERVE_PATH}:${MUSIC_DIRECTORY_PATH-/music}:ro"
       - "${MEDIA_ROOT}:${MEDIA_ROOT}:ro"
       - "${STATIC_ROOT}:/usr/share/nginx/html/staticfiles:ro"
     ports:
       # override those variables in your .env file if needed
-      - "${FUNKWHALE_API_IP}:${FUNKWHALE_API_PORT}:80"
+      - "80:80"
 
   typesense:
     restart: unless-stopped
